@@ -1,7 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace WebApiPizushi.Data.Enteties;
 
+[Table("tblCategories")]
 public class CategoryEntity : BaseEntity<long>
 {
     [StringLength(250)]
