@@ -1,6 +1,6 @@
-
 import {useEffect, useState} from "react";
 import axios from "axios";
+import {Link} from "react-router-dom";
 
 const CategoriesPage = () => {
     
@@ -20,6 +20,7 @@ const CategoriesPage = () => {
     return (
         <>
         <h1 className={"text-center"}>Категорії</h1>
+        <Link to={"Create"} className={"btn btn-primary"}>Додати</Link>
 
         {list.length === 0 ? <h1>Список пустий</h1> :
         <table className="table">
