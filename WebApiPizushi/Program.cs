@@ -1,8 +1,14 @@
+using System;
+using FluentValidation;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using WebApiPizushi.Data;
+using WebApiPizushi.Filters;
 using WebApiPizushi.Interfaces;
+using WebApiPizushi.Models.Category;
 using WebApiPizushi.Services;
+using WebApiPizushi.Validators.Category;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +22,18 @@ builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddControllers();
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.SuppressModelStateInvalidFilter = true;
+});
+
+builder.Services.AddValidatorsFromAssemblies(AppDomain.CurrentDomain.GetAssemblies());
+
+builder.Services.AddMvc(options =>
+{
+    options.Filters.Add<ValidationFilter>();
+});
 
 builder.Services.AddSwaggerGen();
 

@@ -5,42 +5,27 @@ import {useNavigate} from "react-router-dom";
 import BaseTextInput from "../../../Components/Common/BaseTextInput";
 import BaseFileInput from "../../../Components/Common/BaseFileInput";
 
+import * as Yup from "yup";
+import {useFormik} from "formik";
+
+const validationSchema = Yup.object().shape({
+    //name: Yup.string().required("Вкажіть назву"),
+    //slug: Yup.string().required("Вкажіть slug"),
+    imageFile: Yup.mixed().nullable()
+});
+
 const CategoriesCreatePage = () => {
 
-    const [form, setForm] = useState({
+    const initValues = {
         name: "",
         slug: "",
         imageFile: null
-    })
+    };
 
-    const navigate = useNavigate();
-
-    const [errors, setErrors] = useState({})
-
-    const onHandleChange = (e) => {
-        setForm({...form, [e.target.name]: e.target.value});
-    }
-
-    const onHandleFileChange = (e) => {
-        const files = e.target.files;
-        if (files.length > 0) {
-            setForm({...form, [e.target.name]: files[0]});
-        }
-        else {
-            setForm({...form, [e.target.name]: null});
-        }
-    }
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        // if (form.name === "") {
-        //     setErrors({...errors, name: "Вкажіть назву"})
-        // }
-        // if (form.slug === "") {
-        //     setErrors({...errors, slug: "Вкажіть slug"})
-        // }
+    const handleFormikSubmit = async (values) => {
+        console.log("Submit formik", values);
         try {
-            var result = await axiosInstance.post(`${BASE_URL}/api/Categories`, form,
+            var result = await axiosInstance.post(`${BASE_URL}/api/categories`, values,
                 {
                     headers: {
                         "Content-Type": "multipart/form-data"
@@ -48,10 +33,50 @@ const CategoriesCreatePage = () => {
                 });
             console.log("Server result", result);
             navigate("..");
-        } catch (error) {
-            console.error("Send request error", error);
+
+        } catch(err) {
+            console.error("Send request error", err);
+
+            const serverErrors = {};
+            const {response} = err;
+            const {data} = response;
+            if(data) {
+                const {errors} = data;
+                Object.entries(errors).forEach(([key, messages]) => {
+                    let messageLines = "";
+                    messages.forEach(message => {
+                        messageLines += message+" ";
+                        console.log(`${key}: ${message}`);
+                    });
+                    const field = key.charAt(0).toLowerCase() + key.slice(1);
+                    serverErrors[field] = messageLines;
+
+                });
+            }
+            console.log("response", response);
+            console.log("serverErrors", serverErrors);
+            setErrors(serverErrors);
         }
-        console.log("Submit data", form)
+    }
+
+    const formik = useFormik({
+        initialValues: initValues,
+        onSubmit: handleFormikSubmit,
+        validationSchema: validationSchema,
+    });
+
+    const {values, handleSubmit, errors, touched, setErrors, handleChange, setFieldValue} = formik;
+
+    const navigate = useNavigate();
+
+    const onHandleFileChange = (e) => {
+        const files = e.target.files;
+        if (files.length > 0) {
+            setFieldValue("imageFile", files[0]);
+        }
+        else {
+            setFieldValue("imageFile", files[0]);
+        }
     }
 
     return (
@@ -62,18 +87,24 @@ const CategoriesCreatePage = () => {
                 <BaseTextInput
                     field={"name"}
                     label={"Назва"}
-                    value={form.name}
-                    onChange={onHandleChange}/>
+                    value={values.name}
+                    error={errors.name}
+                    touched={touched.name}
+                    onChange={handleChange}/>
 
                 <BaseTextInput
                     field={"slug"}
                     label={"Url-Slug"}
-                    value={form.slug}
-                    onChange={onHandleChange}/>
+                    value={values.slug}
+                    error={errors.slug}
+                    touched={touched.slug}
+                    onChange={handleChange}/>
 
                 <BaseFileInput
                     field={"imageFile"}
                     label={"Виберіть фото"}
+                    error={errors.imageFile}
+                    touched={touched.imageFile}
                     onChange={onHandleFileChange}/>
 
                 <button type="submit" className="btn btn-primary">Додати</button>
